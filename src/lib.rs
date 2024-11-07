@@ -152,57 +152,58 @@ impl Plugin for MipmapGeneratorDebugTextPlugin {
 
 #[cfg(feature = "debug_text")]
 fn init_loading_text(mut commands: Commands) {
-    commands
-        .spawn(NodeBundle {
-            style: Style {
-                left: Val::Px(1.5),
-                top: Val::Px(1.5),
-                ..default()
-            },
-            z_index: ZIndex::Global(-1),
+    // commands
+    //     .spawn((
+    //         Node {
+    //             left: Val::Px(1.5),
+    //             top: Val::Px(1.5),
+    //             ..default()
+    //         },
+    //         GlobalZIndex(-1),
+    //     ))
+    //     .with_children(|parent| {
+    //         parent.spawn((
+    //             Text::new("test"),
+    //             TextFont {
+    //                 font_size: 18.0,
+
+    //                 ..default()
+    //             },
+    //             TextColor( Color::BLACK),
+    //             //MipmapGeneratorDebugLoadingText,
+    //         ));
+    //     });
+    commands.spawn((
+        Node {
+            position_type: PositionType::Absolute,
+            top: Val::Px(12.0),
+            left: Val::Px(12.0),
             ..default()
-        })
-        .with_children(|parent| {
-            parent.spawn((
-                TextBundle::from_sections(vec![TextSection {
-                    style: TextStyle {
-                        font_size: 18.0,
-                        color: Color::BLACK,
-                        ..default()
-                    },
-                    ..default()
-                }]),
-                MipmapGeneratorDebugLoadingText,
-            ));
-        });
-    commands
-        .spawn(NodeBundle::default())
-        .with_children(|parent| {
-            parent.spawn((
-                TextBundle::from_sections(vec![TextSection {
-                    style: TextStyle {
-                        font_size: 18.0,
-                        color: Color::WHITE,
-                        ..default()
-                    },
-                    ..default()
-                }]),
-                MipmapGeneratorDebugLoadingText,
-            ));
-        });
+        },
+        Text::new("asdf"),
+        TextFont {
+            font_size: 18.0,
+            ..default()
+        },
+        TextColor(Color::WHITE),
+        MipmapGeneratorDebugLoadingText,
+    ));
 }
 
 #[cfg(feature = "debug_text")]
 #[derive(Component)]
 pub struct MipmapGeneratorDebugLoadingText;
+
 #[cfg(feature = "debug_text")]
 fn update_loading_text(
-    mut texts: Query<&mut Text, With<MipmapGeneratorDebugLoadingText>>,
+    mut texts: Query<(&mut Text, &mut TextColor), With<MipmapGeneratorDebugLoadingText>>,
     progress: Res<MipmapGenerationProgress>,
     time: Res<Time>,
 ) {
-    for mut text in &mut texts {
-        text.sections[0].value = format!(
+    for (mut text, mut color) in &mut texts {
+        // info!("{} {:?}", e, has_text);
+        // *writer.text(e, 0) = "123".to_string();
+        text.0  = format!(
             "bevy_mod_mipmap_generator progress: {} / {}\n{}",
             progress.processed,
             progress.total,
@@ -215,12 +216,13 @@ fn update_loading_text(
                 String::new()
             }
         );
+       
         let alpha = if progress.processed == progress.total {
-            (text.sections[0].style.color.alpha() - time.delta_seconds() * 0.25).max(0.0)
+            (color.0.alpha() - time.delta_secs() * 0.25).max(0.0)
         } else {
             1.0
         };
-        text.sections[0].style.color.set_alpha(alpha);
+        color.set_alpha(alpha);
     }
 }
 
@@ -240,7 +242,7 @@ pub fn generate_mipmaps<M: Material + GetImages>(
     mut commands: Commands,
     mut material_events: EventReader<AssetEvent<M>>,
     mut materials: ResMut<Assets<M>>,
-    no_mipmap: Query<&Handle<M>, With<NoMipmapGeneration>>,
+    //no_mipmap: Query<&Handle<M>, With<NoMipmapGeneration>>,
     mut images: ResMut<Assets<Image>>,
     default_sampler: Res<DefaultSampler>,
     mut progress: ResMut<MipmapGenerationProgress>,
@@ -256,17 +258,20 @@ pub fn generate_mipmaps<M: Material + GetImages>(
     };
 
     let thread_pool = AsyncComputeTaskPool::get();
-    'outer: for event in material_events.read() {
+    //'outer: 
+    for event in material_events.read() {
         let material_h = match event {
             AssetEvent::Added { id } => id,
             AssetEvent::LoadedWithDependencies { id } => id,
             _ => continue,
         };
-        for m in no_mipmap.iter() {
-            if m.id() == *material_h {
-                continue 'outer;
-            }
-        }
+        // TODO: rename NoMipmapGeneration to NoMipmapGenerationMaterial
+        // for m in no_mipmap.iter() {
+        //     if m.id() == *material_h {
+        //         continue 'outer;
+        //     }
+        // }
+
         // get_mut(material_h) here so we see the filtering right away
         // and even if mipmaps aren't made, we still get the filtering
         if let Some(material) = materials.get_mut(*material_h) {
