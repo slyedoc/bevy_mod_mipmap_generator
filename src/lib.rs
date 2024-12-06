@@ -14,10 +14,10 @@ use bevy::{
     render::{
         render_asset::RenderAssetUsages,
         render_resource::{Extent3d, TextureDimension, TextureFormat},
-        texture::{ImageSampler, ImageSamplerDescriptor},
     },
     tasks::{AsyncComputeTaskPool, Task},
     utils::HashMap,
+    image::{ImageSampler, ImageSamplerDescriptor},
 };
 use futures_lite::future;
 use image::{imageops::FilterType, DynamicImage, ImageBuffer};
@@ -628,17 +628,9 @@ impl GetImages for StandardMaterial {
 
 impl<T: GetImages + MaterialExtension> GetImages for ExtendedMaterial<StandardMaterial, T> {
     fn get_images(&self) -> Vec<&Handle<Image>> {
-        vec![
-            &self.base.base_color_texture,
-            &self.base.emissive_texture,
-            &self.base.metallic_roughness_texture,
-            &self.base.normal_map_texture,
-            &self.base.occlusion_texture,
-        ]
-        .into_iter()
-        .flatten()
-        .chain(self.extension.get_images())
-        .collect()
+        let mut images =self.extension.get_images();
+        images.extend(self.base.get_images());
+        images
     }
 }
 
