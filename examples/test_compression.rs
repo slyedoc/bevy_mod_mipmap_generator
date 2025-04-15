@@ -128,7 +128,7 @@ fn create_test_image(size: u32, cx: f32, cy: f32, channels: u32) -> Image {
             usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
             view_formats: &[],
         },
-        data,
+        data: Some(data),
         ..Default::default()
     }
 }
