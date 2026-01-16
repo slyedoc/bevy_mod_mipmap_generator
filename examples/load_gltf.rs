@@ -48,7 +48,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         PointLight {
             intensity: 2000.0 * 1000.0,
-            shadows_enabled: true,
+            shadow_maps_enabled: true,
             range: 10.0,
             ..default()
         },
