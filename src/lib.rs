@@ -277,6 +277,13 @@ pub fn generate_mipmaps<M: Material + GetImages>(
                         ImageSampler::Descriptor(descriptor) => descriptor,
                     };
                     descriptor.anisotropy_clamp = settings.anisotropic_filtering;
+                    // wgpu requires all filter modes to be Linear when anisotropic filtering is enabled
+                    if settings.anisotropic_filtering > 1 {
+                        use bevy::image::ImageFilterMode;
+                        descriptor.min_filter = ImageFilterMode::Linear;
+                        descriptor.mag_filter = ImageFilterMode::Linear;
+                        descriptor.mipmap_filter = ImageFilterMode::Linear;
+                    }
                     image.sampler = ImageSampler::Descriptor(descriptor);
                     if image.texture_descriptor.mip_level_count == 1
                         && check_image_compatible(image).is_ok()
