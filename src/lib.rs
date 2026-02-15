@@ -271,7 +271,7 @@ pub fn generate_mipmaps<M: Material + GetImages>(
                     material_handles.push(*material_h);
                     continue; //There is already a task for this image
                 }
-                if let Some(image) = images.get_mut(image_h) {
+                if let Some(mut image) = images.get_mut(image_h) {
                     let mut descriptor = match image.sampler.clone() {
                         ImageSampler::Default => default_sampler.0.clone(),
                         ImageSampler::Descriptor(descriptor) => descriptor,
@@ -286,7 +286,7 @@ pub fn generate_mipmaps<M: Material + GetImages>(
                     }
                     image.sampler = ImageSampler::Descriptor(descriptor);
                     if image.texture_descriptor.mip_level_count == 1
-                        && check_image_compatible(image).is_ok()
+                        && check_image_compatible(&image).is_ok()
                     {
                         let mut image = image.clone();
                         let settings = settings.clone();
@@ -320,7 +320,7 @@ pub fn generate_mipmaps<M: Material + GetImages>(
     tasks.retain(|image_h, (task, material_handles)| {
         match future::block_on(future::poll_once(task)) {
             Some(task_data) => {
-                if let Some(image) = images.get_mut(image_h) {
+                if let Some(mut image) = images.get_mut(image_h) {
                     *image = task_data.image;
                     progress.processed += 1;
                     let prev_cached_data_gb = bytes_to_gb(progress.cached_data_size_bytes);
