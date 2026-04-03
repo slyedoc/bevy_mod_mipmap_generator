@@ -9,7 +9,6 @@ edition = "2021"
 anyhow = "1.0"
 bevy = { git = "https://github.com/bevyengine/bevy", branch = "main", default-features = false, features = [
     "bevy_asset",
-    "bevy_scene",
     "bevy_pbr",
     "ktx2",
     "jpeg",
